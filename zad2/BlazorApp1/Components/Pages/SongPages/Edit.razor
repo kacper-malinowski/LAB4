@@ -1,0 +1,111 @@
+﻿@page "/Songs/edit"
+@inject BlazorApp1.Data.ApplicationDbContext DB
+@using BlazorApp1
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h4>Song</h4>
+<hr />
+@if (Song is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Song" OnValidSubmit="UpdateSong" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Song.Id" value="@Song.Id" />
+                <div class="mb-3">
+                    <label for="songtitle" class="form-label">SongTitle:</label>
+                    <InputText id="songtitle" @bind-Value="Song.SongTitle" class="form-control" />
+                    <ValidationMessage For="() => Song.SongTitle" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="songartist" class="form-label">SongArtist:</label>
+                    <InputText id="songartist" @bind-Value="Song.SongArtist" class="form-control" />
+                    <ValidationMessage For="() => Song.SongArtist" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="releasedate" class="form-label">ReleaseDate:</label>
+                    <InputDate id="releasedate" @bind-Value="Song.ReleaseDate" class="form-control" />
+                    <ValidationMessage For="() => Song.ReleaseDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Rating:</label>
+                    <InputNumber id="rating" @bind-Value="Song.Rating" class="form-control" />
+                    <ValidationMessage For="() => Song.Rating" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="ratingcount" class="form-label">RatingCount:</label>
+                    <InputNumber id="ratingcount" @bind-Value="Song.RatingCount" class="form-control" />
+                    <ValidationMessage For="() => Song.RatingCount" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="url" class="form-label">Url:</label>
+                    <InputText id="url" @bind-Value="Song.Url" class="form-control" />
+                    <ValidationMessage For="() => Song.Url" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/songs">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    public Song? Song { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Song ??= await DB.Song.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Song is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see https://aka.ms/RazorPagesCRUD.
+    public async Task UpdateSong()
+    {
+        DB.Attach(Song!).State = EntityState.Modified;
+
+        try
+        {
+            await DB.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!SongExists(Song!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/songs");
+    }
+
+    bool SongExists(int id)
+    {
+        return DB.Song.Any(e => e.Id == id);
+    }
+}

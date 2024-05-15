@@ -1,0 +1,50 @@
+﻿@page "/songs"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject BlazorApp1.Data.ApplicationDbContext DB
+@using BlazorApp1
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+<AuthorizeView>
+    <Authorized>
+        <p>
+            <a href="songs/create">Create New</a>
+        </p>
+
+        <QuickGrid Class="table" Items="songs" Sortable="true">
+            <PropertyColumn Property="song => song.SongTitle" Sortable="true" />
+            <PropertyColumn Property="song => song.SongArtist" Sortable="true" />
+            <PropertyColumn Property="song => song.ReleaseDate" Sortable="true" />
+            <PropertyColumn Property="song => song.Rating" Sortable="true" />
+
+            <TemplateColumn Context="song">
+                <a href="@($"songs/edit?id={song.Id}")">Edit</a> |
+                <a href="@($"songs/details?id={song.Id}")">Details</a> |
+                <a href="@($"songs/delete?id={song.Id}")">Delete</a>
+            </TemplateColumn>
+        </QuickGrid>
+    </Authorized>
+    <NotAuthorized>
+
+        <QuickGrid Class="table" Items="songs" Sortable="true">
+            <PropertyColumn Property="song => song.SongTitle" Sortable="true" />
+            <PropertyColumn Property="song => song.SongArtist" Sortable="true" />
+            <PropertyColumn Property="song => song.ReleaseDate" Sortable="true" />
+            <PropertyColumn Property="song => song.Rating" Sortable="true" />
+        </QuickGrid>
+    </NotAuthorized>
+
+</AuthorizeView>
+
+@code {
+    IQueryable<Song> songs;
+
+    protected override async Task OnInitializedAsync() {
+        songs = DB.Song.AsQueryable();
+    }
+}

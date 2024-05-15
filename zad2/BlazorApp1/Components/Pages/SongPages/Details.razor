@@ -1,0 +1,71 @@
+﻿@page "/songs/details"
+@rendermode InteractiveServer
+@inject BlazorApp1.Data.ApplicationDbContext DB
+@using BlazorApp1
+@inject NavigationManager NavigationManager
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h4>Song</h4>
+    <hr />
+    @if (Song is null) {
+        <p><em>Loading...</em></p>
+    } else {
+        <dt class="col-sm-2">Image</dt>
+        <dd class="col-sm-10"><img src="@Song.Url" alt="Song Image" /></dd>
+        <dl class="row">
+            <dt class="col-sm-2">SongTitle</dt>
+            <dd class="col-sm-10">@Song.SongTitle</dd>
+            <dt class="col-sm-2">SongArtist</dt>
+            <dd class="col-sm-10">@Song.SongArtist</dd>
+            <dt class="col-sm-2">ReleaseDate</dt>
+            <dd class="col-sm-10">@Song.ReleaseDate</dd>
+            <dt class="col-sm-2">Rating</dt>
+            <dd class="col-sm-10">@Song.Rating</dd>
+            <dt class="col-sm-2">RatingCount</dt>
+            <dd class="col-sm-10">@Song.RatingCount</dd>
+        </dl>
+        <div>
+            <a href="@($"/songs/edit?id={Song.Id}")">Edit</a> |
+            <a href="@($"/songs")">Back to List</a>
+        </div>
+    }
+    <h2>Add rating</h2>
+    <input type="number" @bind="rating" />
+    <button class="btn btn-primary" @onclick="AddRating">Add Rating</button>
+    Choose a number between 0 and 5
+    @if (rating < 0 || rating > 5) {
+        <p style="color: red;">Rating must be between 0 and 5.</p>
+    }
+</div>
+
+@code {
+    Song? Song;
+    int rating;
+
+    [SupplyParameterFromQuery]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync() {
+        Song = await DB.Song.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Song is null) {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+    public async Task AddRating() {
+        if (rating >= 0 && rating <= 5) {
+            double sum = (double)Song.Rating * (double)Song.RatingCount;
+            Song.RatingCount++;
+            Song.Rating = (float)(sum + rating) / Song.RatingCount;
+            await DB.SaveChangesAsync();
+
+            NavigationManager.NavigateTo("/songs");
+        }
+    }
+
+}
